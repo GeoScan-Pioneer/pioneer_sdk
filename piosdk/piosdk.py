@@ -9,7 +9,7 @@ import time
 
 class Pioneer:
     def __init__(self, method=0, pioneer_ip='192.168.4.1', pioneer_mavlink_port=8001, device='/dev/serial0',
-                 baud=115200, logger=True):
+                 baud=115200, logger=False):
         self.__VIDEO_BUFFER = 65535
 
         self.__heartbeat_send_delay = 0.25
@@ -674,7 +674,7 @@ class Pioneer:
         position = self.__mavlink_socket.recv_match(type='LOCAL_POSITION_NED', blocking=blocking,
                                                     timeout=self.__ack_timeout)
         if not position:
-            return [None]
+            return None
         if position.get_type() == "BAD_DATA":
             if mavutil.all_printable(position.data):
                 sys.stdout.write(position.data)
@@ -981,13 +981,13 @@ class Pioneer:
     def fire_detection(self, sim=True):
         """ Мигание красной индикацией """
         if sim:
-            flasher_thread = threading.Thread(target=self.flasher)
+            flasher_thread = threading.Thread(target=self.__flasher)
             flasher_thread.start()
             print('flasher')
         else:
             self.led_custom(mode=2, color1=[255, 0, 0], timer=5)
 
-    def flasher(self, color=[255, 0, 0], t=5, period=0.5):
+    def __flasher(self, color=(255, 0, 0), t=5, period=0.5):
         t_start = time.time()
         while True:
             self.led_control(255, color[0], color[1], color[2])
