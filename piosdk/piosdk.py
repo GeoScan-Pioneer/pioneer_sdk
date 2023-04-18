@@ -684,7 +684,7 @@ class Pioneer:
 
         ack_timeout = 0.1
         send_time = time.time()
-        parameters = dict(x=x, y=-y, z=-z, vx=vx, vy=vy, vz=vz, afx=afx, afy=afy, afz=afz, force_set=0, yaw=yaw,
+        parameters = dict(x=x, y=y, z=z, vx=vx, vy=vy, vz=vz, afx=afx, afy=afy, afz=afz, force_set=0, yaw=yaw,
                           yaw_rate=yaw_rate)  # 0-force_set
         mask = 0b0000111111111111
         element_mask = 0b0000000000000001
