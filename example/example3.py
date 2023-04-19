@@ -1,7 +1,7 @@
-from piosdk.piosdk import Pioneer
+from piosdk import Pioneer
 import threading
 import time
-from sklearn.cluster import KMeans # pip install sklearn
+from sklearn.cluster import KMeans  # pip install sklearn
 
 
 def get_center_clasters(data, num_clasters):
@@ -18,9 +18,10 @@ drones.append(Pioneer(method=2, pioneer_ip="127.0.0.1", pioneer_mavlink_port=800
 drones.append(Pioneer(method=2, pioneer_ip="127.0.0.1", pioneer_mavlink_port=8002, logger=False))
 drones.append(Pioneer(method=2, pioneer_ip="127.0.0.1", pioneer_mavlink_port=8003, logger=False))
 
-points_interest = [] # массив хранит в себе все точки, где температура была 60
-centre_fire = [] # массив куда запишутся центры кластеров
-state_misiion = [0, 0, 0] # состояние каждой миссии. 0 - не выполняется, 1 - выполняется, 2 - выполнена
+points_interest = []  # массив хранит в себе все точки, где температура была 60
+centre_fire = []  # массив куда запишутся центры кластеров
+state_misiion = [0, 0, 0]  # состояние каждой миссии. 0 - не выполняется, 1 - выполняется, 2 - выполнена
+
 
 def serach():
     state_misiion[0] = 1
@@ -47,12 +48,12 @@ def serach():
     drones[0].takeoff()
     new_point = True
     while True:
-        cyrrent_temp = drones[0].get_piro_sensor_data(blocking=True)
-
-        if cyrrent_temp >= 50:
+        current_temp = drones[0].get_piro_sensor_data(blocking=True)
+        if current_temp is not None and current_temp >= 100:
             curr_pos = drones[0].get_local_position_lps(blocking=True)
-            print(curr_pos)
-            points_interest.append([curr_pos[0], curr_pos[1]])
+            if curr_pos is not None:
+                print(curr_pos, current_temp)
+                points_interest.append([curr_pos[0], curr_pos[1]])
 
         # print(drones[0].get_local_position_lps(blocking=True))
         if new_point:
@@ -129,6 +130,9 @@ def action_drone2():
             new_point = False
 
         if drones[2].point_reached(True):
+            if current_mission_point == 0:
+                drones[2].led_custom(mode=2, color1=[255, 0, 0], timer=10)
+                time.sleep(5)
             new_point = True
             current_mission_point += 1
 
@@ -141,6 +145,7 @@ def action_drone2():
     state_misiion[2] = 2
 
 
+is_start_thread = False
 if __name__ == '__main__':
     # Создаем поток для поиска пожаров и запускаем
     serach_thread = threading.Thread(target=serach)
@@ -157,16 +162,16 @@ if __name__ == '__main__':
             print(points_interest)
 
             # вызываем функцию для поиска центров класетров. Тк пожара 2, то кол-во кластеров равно двум
-            centre = get_center_clasters(data=points_interest, num_clasters=2)
-            print(centre)
+            centre = get_center_clasters(data=points_interest, num_clasters=3)
+            print(centre, "centre")
 
             # Добалвяем найденный центры в массив, так же приписываем им координату z
             for c in centre:
                 centre_fire.append([c[0], c[1], 1])
 
         # Если миссия поиска завершена, и найдены центры, то запускаем потоки на тушение
-        if state_misiion[0] == 2 and len(centre_fire) != 0:
-
+        if state_misiion[0] == 2 and len(centre_fire) != 0 and not is_start_thread:
+            is_start_thread = True
             action_drone1_thread.start()
             action_drone2_thread.start()
 
