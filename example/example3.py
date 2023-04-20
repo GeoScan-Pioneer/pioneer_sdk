@@ -1,7 +1,7 @@
 from piosdk import Pioneer
 import threading
 import time
-from sklearn.cluster import KMeans  # pip install sklearn
+from sklearn.cluster import KMeans  # pip install scikit-learn
 
 
 def get_center_clasters(data, num_clasters):
